@@ -30,3 +30,39 @@ public class CategoriaDatos {
             return false;
         }
     }
+
+       public boolean actualizar(CategoriaBeans categoria) {
+        String sql = "UPDATE categoria SET nombre_categoria = ? WHERE id_categoria = ?";
+        try (Connection con = Conexion.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, categoria.getNombreCategoria());
+            ps.setInt(2, categoria.getIdCategoria());
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null,
+                    "Error al actualizar la categoría:\n" + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+    }
+
+    public boolean eliminar(int idCategoria) {
+        String sql = "DELETE FROM categoria WHERE id_categoria = ?";
+        try (Connection con = Conexion.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, idCategoria);
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null,
+                    "No se puede eliminar la categoría. Es posible que tenga libros asociados.\n"
+                    + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+    }
+
+    
