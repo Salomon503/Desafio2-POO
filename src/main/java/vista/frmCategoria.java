@@ -62,3 +62,51 @@ public class frmCategoria extends JFrame {
                 }
             }
         });
+
+        
+        JPanel panelForm = new JPanel(new GridBagLayout());
+        panelForm.setBorder(BorderFactory.createTitledBorder("Datos de la categoría"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(4, 6, 4, 6);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        gbc.gridx = 0; gbc.gridy = 0;
+        panelForm.add(new JLabel("Nombre de categoría:"), gbc);
+        gbc.gridx = 1;
+        txtNombreCategoria = new JTextField(18);
+        panelForm.add(txtNombreCategoria, gbc);
+
+        add(panelForm, BorderLayout.NORTH);
+
+        modeloTabla = new DefaultTableModel(new Object[]{"ID", "Nombre de categoría"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        tblCategorias = new JTable(modeloTabla);
+        tblCategorias.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tblCategorias.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && tblCategorias.getSelectedRow() != -1) {
+                cargarSeleccionEnFormulario();
+            }
+        });
+        add(new JScrollPane(tblCategorias), BorderLayout.CENTER);
+
+        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 8));
+        btnGuardar = new JButton("Guardar");
+        btnGuardar.addActionListener(e -> guardar());
+        btnEditar = new JButton("Editar");
+        btnEditar.addActionListener(e -> editar());
+        btnEliminar = new JButton("Eliminar");
+        btnEliminar.setForeground(Color.RED.darker());
+        btnEliminar.addActionListener(e -> eliminar());
+        btnLimpiar = new JButton("Limpiar");
+        btnLimpiar.addActionListener(e -> limpiar());
+
+        panelBotones.add(btnGuardar);
+        panelBotones.add(btnEditar);
+        panelBotones.add(btnEliminar);
+        panelBotones.add(btnLimpiar);
+        add(panelBotones, BorderLayout.SOUTH);
+    }
