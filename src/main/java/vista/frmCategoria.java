@@ -182,3 +182,29 @@ public class frmCategoria extends JFrame {
             }
         }
     }
+
+        private void limpiar() {
+        txtNombreCategoria.setText("");
+        idCategoriaSeleccionada = 0;
+        tblCategorias.clearSelection();
+        habilitarBotonesEdicion(false);
+        txtNombreCategoria.requestFocus();
+    }
+
+    private boolean validar() {
+        String nombre = txtNombreCategoria.getText().trim();
+        if (nombre.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El nombre de la categoría es obligatorio.",
+                    "Campo requerido", JOptionPane.WARNING_MESSAGE);
+            txtNombreCategoria.requestFocus();
+            return false;
+        }
+        if (nombre.length() < 3) {
+            JOptionPane.showMessageDialog(this, "El nombre de la categoría debe tener al menos 3 caracteres.",
+                    "Valor inválido", JOptionPane.WARNING_MESSAGE);
+            txtNombreCategoria.requestFocus();
+            return false;
+        }
+        return true;
+    }
+}
