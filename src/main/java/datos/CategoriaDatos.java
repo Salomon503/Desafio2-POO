@@ -65,4 +65,28 @@ public class CategoriaDatos {
         }
     }
 
-    
+
+    public List<CategoriaBeans> listarTodos() {
+        List<CategoriaBeans> lista = new ArrayList<>();
+        String sql = "SELECT id_categoria, nombre_categoria FROM categoria ORDER BY nombre_categoria";
+
+        try (Connection con = Conexion.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                CategoriaBeans c = new CategoriaBeans();
+                c.setIdCategoria(rs.getInt("id_categoria"));
+                c.setNombreCategoria(rs.getString("nombre_categoria"));
+                lista.add(c);
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null,
+                    "Error al listar categorías:\n" + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        return lista;
+    }
+}
+
