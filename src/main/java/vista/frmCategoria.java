@@ -110,3 +110,75 @@ public class frmCategoria extends JFrame {
         panelBotones.add(btnLimpiar);
         add(panelBotones, BorderLayout.SOUTH);
     }
+
+        private void cargarTabla() {
+        modeloTabla.setRowCount(0);
+        List<CategoriaBeans> categorias = categoriaDatos.listarTodos();
+        for (CategoriaBeans c : categorias) {
+            modeloTabla.addRow(new Object[]{c.getIdCategoria(), c.getNombreCategoria()});
+        }
+    }
+
+    private void cargarSeleccionEnFormulario() {
+        int fila = tblCategorias.getSelectedRow();
+        idCategoriaSeleccionada = (int) modeloTabla.getValueAt(fila, 0);
+        txtNombreCategoria.setText(String.valueOf(modeloTabla.getValueAt(fila, 1)));
+        habilitarBotonesEdicion(true);
+    }
+
+    private void habilitarBotonesEdicion(boolean habilitar) {
+        btnEditar.setEnabled(habilitar);
+        btnEliminar.setEnabled(habilitar);
+    }
+
+    private void guardar() {
+        if (!validar()) {
+            return;
+        }
+        CategoriaBeans c = new CategoriaBeans(txtNombreCategoria.getText().trim());
+        if (categoriaDatos.insertar(c)) {
+            JOptionPane.showMessageDialog(this, "Categoría registrada correctamente.",
+                    "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            limpiar();
+            cargarTabla();
+        }
+    }
+
+    private void editar() {
+        if (idCategoriaSeleccionada == 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Debe seleccionar una categoría de la tabla para editarla.",
+                    "Ningún registro seleccionado", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (!validar()) {
+            return;
+        }
+        CategoriaBeans c = new CategoriaBeans(idCategoriaSeleccionada, txtNombreCategoria.getText().trim());
+        if (categoriaDatos.actualizar(c)) {
+            JOptionPane.showMessageDialog(this, "Categoría actualizada correctamente.",
+                    "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            limpiar();
+            cargarTabla();
+        }
+    }
+
+    private void eliminar() {
+        if (idCategoriaSeleccionada == 0) {
+            JOptionPane.showMessageDialog(this,
+                    "Debe seleccionar una categoría de la tabla para eliminarla.",
+                    "Ningún registro seleccionado", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int confirmacion = JOptionPane.showConfirmDialog(this,
+                "¿Está seguro que desea eliminar la categoría seleccionada?",
+                "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            if (categoriaDatos.eliminar(idCategoriaSeleccionada)) {
+                JOptionPane.showMessageDialog(this, "Categoría eliminada correctamente.",
+                        "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                limpiar();
+                cargarTabla();
+            }
+        }
+    }
