@@ -314,6 +314,12 @@ public class frmBiblioteca extends JFrame {
     // Operaciones CRUD
     // =========================================================
     private void guardarLibro() {
+        // Si hay un libro seleccionado en la tabla, "Guardar" actualiza ese registro
+        // en lugar de crear uno nuevo (evita duplicados).
+        if (idLibroSeleccionado != 0) {
+            editarLibro();
+            return;
+        }
         if (!validarCampos()) {
             return;
         }
