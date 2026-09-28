@@ -148,6 +148,7 @@ public class frmBiblioteca extends JFrame {
         panelDatos.add(new JLabel("Categoría:"), gbc);
         gbc.gridx = 3;
         cbCategoria = new JComboBox<>();
+        cbCategoria.setEditable(true); // se puede escribir una categoría nueva o elegir una existente
         panelDatos.add(cbCategoria, gbc);
 
         panelPrincipal.add(panelDatos, BorderLayout.NORTH);
@@ -235,6 +236,7 @@ public class frmBiblioteca extends JFrame {
     public void cargarCategoriasEnCombo() {
         List<CategoriaBeans> categorias = categoriaDatos.listarTodos();
         cbCategoria.setModel(new DefaultComboBoxModel<>(categorias.toArray(new CategoriaBeans[0])));
+        cbCategoria.setSelectedItem(null);
     }
 
     private void cargarValoresFiltro() {
@@ -329,11 +331,16 @@ public class frmBiblioteca extends JFrame {
             return; // canceló o hubo un error (ya se mostró el mensaje)
         }
 
+        int idCategoria = obtenerOCrearCategoria();
+        if (idCategoria == 0) {
+            return; // canceló o hubo un error (ya se mostró el mensaje)
+        }
+
         LibroBeans libro = new LibroBeans();
         libro.setTitulo(txtTitulo.getText().trim());
         libro.setAnioPublicacion(Integer.parseInt(txtAnio.getText().trim()));
         libro.setIdAutor(idAutor);
-        libro.setIdCategoria(((CategoriaBeans) cbCategoria.getSelectedItem()).getIdCategoria());
+        libro.setIdCategoria(idCategoria);
 
         if (libroDatos.insertar(libro)) {
             JOptionPane.showMessageDialog(this, "Libro registrado correctamente.",
@@ -359,12 +366,17 @@ public class frmBiblioteca extends JFrame {
             return; // canceló o hubo un error (ya se mostró el mensaje)
         }
 
+        int idCategoria = obtenerOCrearCategoria();
+        if (idCategoria == 0) {
+            return; // canceló o hubo un error (ya se mostró el mensaje)
+        }
+
         LibroBeans libro = new LibroBeans();
         libro.setIdLibro(idLibroSeleccionado);
         libro.setTitulo(txtTitulo.getText().trim());
         libro.setAnioPublicacion(Integer.parseInt(txtAnio.getText().trim()));
         libro.setIdAutor(idAutor);
-        libro.setIdCategoria(((CategoriaBeans) cbCategoria.getSelectedItem()).getIdCategoria());
+        libro.setIdCategoria(idCategoria);
 
         if (libroDatos.actualizar(libro)) {
             JOptionPane.showMessageDialog(this, "Libro actualizado correctamente.",
@@ -401,9 +413,7 @@ public class frmBiblioteca extends JFrame {
         txtTitulo.setText("");
         txtAnio.setText("");
         cbAutor.setSelectedItem(null);
-        if (cbCategoria.getItemCount() > 0) {
-            cbCategoria.setSelectedIndex(0);
-        }
+        cbCategoria.setSelectedItem(null);
         idLibroSeleccionado = 0;
         tblLibros.clearSelection();
         habilitarBotonesEdicion(false);
@@ -450,6 +460,38 @@ public class frmBiblioteca extends JFrame {
         if (nuevoId > 0) {
             cargarAutoresEnCombo();
             seleccionarEnCombo(cbAutor, nombre);
+        }
+        return nuevoId;
+    }
+
+    private String getTextoCategoria() {
+        Object item = cbCategoria.getEditor().getItem();
+        return item == null ? "" : item.toString().trim();
+    }
+
+    /**
+     * Retorna el id de la categoría escrita/seleccionada. Si no existe en la BD,
+     * pregunta si desea registrarla. Retorna 0 si se cancela o falla.
+     */
+    private int obtenerOCrearCategoria() {
+        String nombre = getTextoCategoria();
+
+        CategoriaBeans existente = categoriaDatos.buscarPorNombre(nombre);
+        if (existente != null) {
+            return existente.getIdCategoria();
+        }
+
+        int respuesta = JOptionPane.showConfirmDialog(this,
+                "La categoría \"" + nombre + "\" no está registrada.\n¿Desea registrarla?",
+                "Nueva categoría", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        if (respuesta != JOptionPane.YES_OPTION) {
+            return 0;
+        }
+
+        int nuevoId = categoriaDatos.insertarYObtenerId(new CategoriaBeans(nombre));
+        if (nuevoId > 0) {
+            cargarCategoriasEnCombo();
+            seleccionarEnCombo(cbCategoria, nombre);
         }
         return nuevoId;
     }
@@ -537,11 +579,26 @@ public class frmBiblioteca extends JFrame {
             return false;
         }
 
-        if (cbCategoria.getSelectedItem() == null) {
+        String categoria = getTextoCategoria();
+        if (categoria.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    "Debe seleccionar una categoría. Si no existe ninguna, regístrela primero "
-                    + "desde el menú Administrar > Gestionar Categorías.",
-                    "Categoría requerida", JOptionPane.WARNING_MESSAGE);
+                    "Debe escribir o seleccionar la categoría del libro.",
+                    "Campo requerido", JOptionPane.WARNING_MESSAGE);
+            cbCategoria.requestFocus();
+            return false;
+        }
+        if (categoria.length() < 3) {
+            JOptionPane.showMessageDialog(this,
+                    "El nombre de la categoría debe tener al menos 3 caracteres.",
+                    "Valor inválido", JOptionPane.WARNING_MESSAGE);
+            cbCategoria.requestFocus();
+            return false;
+        }
+        if (!categoria.matches("[\\p{L} .'\\-]+")) {
+            JOptionPane.showMessageDialog(this,
+                    "El nombre de la categoría solo puede contener letras, espacios, puntos, apóstrofes y guiones.",
+                    "Formato inválido", JOptionPane.WARNING_MESSAGE);
+            cbCategoria.requestFocus();
             return false;
         }
 
