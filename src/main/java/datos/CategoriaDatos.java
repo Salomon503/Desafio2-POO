@@ -31,11 +31,7 @@ public class CategoriaDatos {
         }
     }
 
-<<<<<<< HEAD
     public boolean actualizar(CategoriaBeans categoria) {
-=======
-       public boolean actualizar(CategoriaBeans categoria) {
->>>>>>> bb560d047c7c63ff677cfad7e9ed908b7aeae2a2
         String sql = "UPDATE categoria SET nombre_categoria = ? WHERE id_categoria = ?";
         try (Connection con = Conexion.getConexion();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -69,10 +65,6 @@ public class CategoriaDatos {
         }
     }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> bb560d047c7c63ff677cfad7e9ed908b7aeae2a2
     public List<CategoriaBeans> listarTodos() {
         List<CategoriaBeans> lista = new ArrayList<>();
         String sql = "SELECT id_categoria, nombre_categoria FROM categoria ORDER BY nombre_categoria";
@@ -96,7 +88,3 @@ public class CategoriaDatos {
         return lista;
     }
 }
-<<<<<<< HEAD
-=======
-
->>>>>>> bb560d047c7c63ff677cfad7e9ed908b7aeae2a2
