@@ -141,6 +141,7 @@ public class frmBiblioteca extends JFrame {
         panelDatos.add(new JLabel("Autor:"), gbc);
         gbc.gridx = 1;
         cbAutor = new JComboBox<>();
+        cbAutor.setEditable(true); // se puede escribir un autor nuevo o elegir uno existente
         panelDatos.add(cbAutor, gbc);
 
         gbc.gridx = 2;
@@ -228,6 +229,7 @@ public class frmBiblioteca extends JFrame {
     public void cargarAutoresEnCombo() {
         List<AutorBeans> autores = autorDatos.listarTodos();
         cbAutor.setModel(new DefaultComboBoxModel<>(autores.toArray(new AutorBeans[0])));
+        cbAutor.setSelectedItem(null);
     }
 
     public void cargarCategoriasEnCombo() {
@@ -316,10 +318,15 @@ public class frmBiblioteca extends JFrame {
             return;
         }
 
+        int idAutor = obtenerOCrearAutor();
+        if (idAutor == 0) {
+            return; // canceló o hubo un error (ya se mostró el mensaje)
+        }
+
         LibroBeans libro = new LibroBeans();
         libro.setTitulo(txtTitulo.getText().trim());
         libro.setAnioPublicacion(Integer.parseInt(txtAnio.getText().trim()));
-        libro.setIdAutor(((AutorBeans) cbAutor.getSelectedItem()).getIdAutor());
+        libro.setIdAutor(idAutor);
         libro.setIdCategoria(((CategoriaBeans) cbCategoria.getSelectedItem()).getIdCategoria());
 
         if (libroDatos.insertar(libro)) {
@@ -341,11 +348,16 @@ public class frmBiblioteca extends JFrame {
             return;
         }
 
+        int idAutor = obtenerOCrearAutor();
+        if (idAutor == 0) {
+            return; // canceló o hubo un error (ya se mostró el mensaje)
+        }
+
         LibroBeans libro = new LibroBeans();
         libro.setIdLibro(idLibroSeleccionado);
         libro.setTitulo(txtTitulo.getText().trim());
         libro.setAnioPublicacion(Integer.parseInt(txtAnio.getText().trim()));
-        libro.setIdAutor(((AutorBeans) cbAutor.getSelectedItem()).getIdAutor());
+        libro.setIdAutor(idAutor);
         libro.setIdCategoria(((CategoriaBeans) cbCategoria.getSelectedItem()).getIdCategoria());
 
         if (libroDatos.actualizar(libro)) {
@@ -382,9 +394,7 @@ public class frmBiblioteca extends JFrame {
     private void limpiarFormulario() {
         txtTitulo.setText("");
         txtAnio.setText("");
-        if (cbAutor.getItemCount() > 0) {
-            cbAutor.setSelectedIndex(0);
-        }
+        cbAutor.setSelectedItem(null);
         if (cbCategoria.getItemCount() > 0) {
             cbCategoria.setSelectedIndex(0);
         }
@@ -392,6 +402,50 @@ public class frmBiblioteca extends JFrame {
         tblLibros.clearSelection();
         habilitarBotonesEdicion(false);
         txtTitulo.requestFocus();
+    }
+
+    // =========================================================
+    // Autor escrito a mano: buscar en BD o registrar si no existe
+    // =========================================================
+    private String getTextoAutor() {
+        Object item = cbAutor.getEditor().getItem();
+        return item == null ? "" : item.toString().trim();
+    }
+
+    /**
+     * Retorna el id del autor escrito/seleccionado. Si no existe en la BD,
+     * pide la nacionalidad y lo registra. Retorna 0 si se cancela o falla.
+     */
+    private int obtenerOCrearAutor() {
+        String nombre = getTextoAutor();
+
+        AutorBeans existente = autorDatos.buscarPorNombre(nombre);
+        if (existente != null) {
+            return existente.getIdAutor();
+        }
+
+        String nacionalidad = JOptionPane.showInputDialog(this,
+                "El autor \"" + nombre + "\" no está registrado.\n"
+                + "Ingrese su nacionalidad para registrarlo:",
+                "Nuevo autor", JOptionPane.QUESTION_MESSAGE);
+
+        if (nacionalidad == null) {
+            return 0; // el usuario canceló
+        }
+        nacionalidad = nacionalidad.trim();
+        if (nacionalidad.isEmpty() || !nacionalidad.matches("[\\p{L} .'\\-]+")) {
+            JOptionPane.showMessageDialog(this,
+                    "La nacionalidad es obligatoria y solo puede contener letras.",
+                    "Valor inválido", JOptionPane.WARNING_MESSAGE);
+            return 0;
+        }
+
+        int nuevoId = autorDatos.insertarYObtenerId(new AutorBeans(nombre, nacionalidad));
+        if (nuevoId > 0) {
+            cargarAutoresEnCombo();
+            seleccionarEnCombo(cbAutor, nombre);
+        }
+        return nuevoId;
     }
 
     // =========================================================
@@ -454,11 +508,26 @@ public class frmBiblioteca extends JFrame {
             return false;
         }
 
-        if (cbAutor.getSelectedItem() == null) {
+        String autor = getTextoAutor();
+        if (autor.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    "Debe seleccionar un autor. Si no existe ninguno, regístrelo primero "
-                    + "desde el menú Administrar > Gestionar Autores.",
-                    "Autor requerido", JOptionPane.WARNING_MESSAGE);
+                    "Debe escribir o seleccionar el autor del libro.",
+                    "Campo requerido", JOptionPane.WARNING_MESSAGE);
+            cbAutor.requestFocus();
+            return false;
+        }
+        if (autor.length() < 3) {
+            JOptionPane.showMessageDialog(this,
+                    "El nombre del autor debe tener al menos 3 caracteres.",
+                    "Valor inválido", JOptionPane.WARNING_MESSAGE);
+            cbAutor.requestFocus();
+            return false;
+        }
+        if (!autor.matches("[\\p{L} .'\\-]+")) {
+            JOptionPane.showMessageDialog(this,
+                    "El nombre del autor solo puede contener letras, espacios, puntos, apóstrofes y guiones.",
+                    "Formato inválido", JOptionPane.WARNING_MESSAGE);
+            cbAutor.requestFocus();
             return false;
         }
 
