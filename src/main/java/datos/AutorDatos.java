@@ -32,4 +32,28 @@ public class AutorDatos {
             return false;
         }
     }
+
+    public List<AutorBeans> listarTodos() {
+        List<AutorBeans> lista = new ArrayList<>();
+        String sql = "SELECT id_autor, nombre, nacionalidad FROM autor ORDER BY nombre";
+
+        try (Connection con = Conexion.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                AutorBeans a = new AutorBeans();
+                a.setIdAutor(rs.getInt("id_autor"));
+                a.setNombre(rs.getString("nombre"));
+                a.setNacionalidad(rs.getString("nacionalidad"));
+                lista.add(a);
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null,
+                    "Error al listar autores:\n" + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        return lista;
+    }
 }
