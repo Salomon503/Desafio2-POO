@@ -33,6 +33,42 @@ public class AutorDatos {
         }
     }
 
+    public boolean actualizar(AutorBeans autor) {
+        String sql = "UPDATE autor SET nombre = ?, nacionalidad = ? WHERE id_autor = ?";
+        try (Connection con = Conexion.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, autor.getNombre());
+            ps.setString(2, autor.getNacionalidad());
+            ps.setInt(3, autor.getIdAutor());
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null,
+                    "Error al actualizar el autor:\n" + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+    }
+
+    public boolean eliminar(int idAutor) {
+        String sql = "DELETE FROM autor WHERE id_autor = ?";
+        try (Connection con = Conexion.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, idAutor);
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            // Captura típica: FK en uso por algún libro
+            JOptionPane.showMessageDialog(null,
+                    "No se puede eliminar el autor. Es posible que tenga libros asociados.\n"
+                    + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+    }
+
     public List<AutorBeans> listarTodos() {
         List<AutorBeans> lista = new ArrayList<>();
         String sql = "SELECT id_autor, nombre, nacionalidad FROM autor ORDER BY nombre";
