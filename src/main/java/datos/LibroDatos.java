@@ -80,4 +80,40 @@ public class LibroDatos {
             return false;
         }
     }
+
+    /**
+     * Método privado de apoyo: ejecuta la consulta SELECT indicada,
+     * asignando el parámetro (id_autor o id_categoria) cuando corresponde.
+     */
+    private List<LibroBeans> ejecutarConsulta(String sql, String tipoFiltro, Integer valorFiltro) {
+        List<LibroBeans> lista = new ArrayList<>();
+
+        try (Connection con = Conexion.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            if (tipoFiltro != null) {
+                ps.setInt(1, valorFiltro);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    LibroBeans l = new LibroBeans();
+                    l.setIdLibro(rs.getInt("id_libro"));
+                    l.setTitulo(rs.getString("titulo"));
+                    l.setAnioPublicacion(rs.getInt("anio_publicacion"));
+                    l.setIdAutor(rs.getInt("id_autor"));
+                    l.setIdCategoria(rs.getInt("id_categoria"));
+                    l.setNombreAutor(rs.getString("nombre_autor"));
+                    l.setNombreCategoria(rs.getString("nombre_categoria"));
+                    lista.add(l);
+                }
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null,
+                    "Error al consultar libros:\n" + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        return lista;
+    }
 }
