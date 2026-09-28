@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
@@ -86,5 +87,51 @@ public class CategoriaDatos {
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
         return lista;
+    }
+
+    /** Busca una categoría por nombre (sin distinguir mayúsculas). Retorna null si no existe. */
+    public CategoriaBeans buscarPorNombre(String nombre) {
+        String sql = "SELECT id_categoria, nombre_categoria FROM categoria "
+                   + "WHERE LOWER(nombre_categoria) = LOWER(?)";
+        try (Connection con = Conexion.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, nombre);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new CategoriaBeans(rs.getInt("id_categoria"),
+                            rs.getString("nombre_categoria"));
+                }
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null,
+                    "Error al buscar la categoría:\n" + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        return null;
+    }
+
+    /** Inserta una categoría y retorna el id generado (0 si falla). */
+    public int insertarYObtenerId(CategoriaBeans categoria) {
+        String sql = "INSERT INTO categoria (nombre_categoria) VALUES (?)";
+        try (Connection con = Conexion.getConexion();
+             PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setString(1, categoria.getNombreCategoria());
+            if (ps.executeUpdate() > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null,
+                    "Error al registrar la categoría:\n" + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        return 0;
     }
 }
