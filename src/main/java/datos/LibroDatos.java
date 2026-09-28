@@ -81,6 +81,21 @@ public class LibroDatos {
         }
     }
 
+    public List<LibroBeans> listarTodos() {
+        String sql = SELECT_BASE + "ORDER BY l.id_libro";
+        return ejecutarConsulta(sql, null, null);
+    }
+
+    public List<LibroBeans> filtrarPorAutor(int idAutor) {
+        String sql = SELECT_BASE + "WHERE l.id_autor = ? ORDER BY l.id_libro";
+        return ejecutarConsulta(sql, "autor", idAutor);
+    }
+
+    public List<LibroBeans> filtrarPorCategoria(int idCategoria) {
+        String sql = SELECT_BASE + "WHERE l.id_categoria = ? ORDER BY l.id_libro";
+        return ejecutarConsulta(sql, "categoria", idCategoria);
+    }
+
     /**
      * Método privado de apoyo: ejecuta la consulta SELECT indicada,
      * asignando el parámetro (id_autor o id_categoria) cuando corresponde.
