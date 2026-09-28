@@ -207,4 +207,3 @@ public class frmCategoria extends JFrame {
         return true;
     }
 }
-
