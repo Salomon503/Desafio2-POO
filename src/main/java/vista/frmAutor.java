@@ -1,7 +1,7 @@
 package vista;
 
-import beans.CategoriaBeans;
-import datos.CategoriaDatos;
+import beans.AutorBeans;
+import datos.AutorDatos;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -22,25 +22,26 @@ import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 
 /**
- * Formulario secundario (JFrame) para el CRUD de Categorías literarias.
- * Al cerrarse, refresca el combo de categorías del formulario principal.
+ * Formulario secundario (JFrame) para el CRUD de Autores.
+ * Al cerrarse, refresca el combo de autores del formulario principal.
  */
-public class frmCategoria extends JFrame {
+public class frmAutor extends JFrame {
 
-    private final CategoriaDatos categoriaDatos = new CategoriaDatos();
+    private final AutorDatos autorDatos = new AutorDatos();
     private final frmBiblioteca padre;
 
-    private JTextField txtNombreCategoria;
-    private JTable tblCategorias;
+    private JTextField txtNombre;
+    private JTextField txtNacionalidad;
+    private JTable tblAutores;
     private DefaultTableModel modeloTabla;
     private JButton btnGuardar;
     private JButton btnEditar;
     private JButton btnEliminar;
     private JButton btnLimpiar;
 
-    private int idCategoriaSeleccionada = 0;
+    private int idAutorSeleccionado = 0;
 
-    public frmCategoria(frmBiblioteca padre) {
+    public frmAutor(frmBiblioteca padre) {
         this.padre = padre;
         initComponents();
         cargarTabla();
@@ -48,8 +49,8 @@ public class frmCategoria extends JFrame {
     }
 
     private void initComponents() {
-        setTitle("Gestión de Categorías Literarias");
-        setSize(520, 400);
+        setTitle("Gestión de Autores");
+        setSize(560, 420);
         setLocationRelativeTo(padre);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout(8, 8));
@@ -58,40 +59,49 @@ public class frmCategoria extends JFrame {
             @Override
             public void windowClosing(java.awt.event.WindowEvent e) {
                 if (padre != null) {
-                    padre.cargarCategoriasEnCombo();
+                    padre.cargarAutoresEnCombo();
                 }
             }
         });
 
+        // ---- Panel formulario ----
         JPanel panelForm = new JPanel(new GridBagLayout());
-        panelForm.setBorder(BorderFactory.createTitledBorder("Datos de la categoría"));
+        panelForm.setBorder(BorderFactory.createTitledBorder("Datos del autor"));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(4, 6, 4, 6);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         gbc.gridx = 0; gbc.gridy = 0;
-        panelForm.add(new JLabel("Nombre de categoría:"), gbc);
+        panelForm.add(new JLabel("Nombre:"), gbc);
         gbc.gridx = 1;
-        txtNombreCategoria = new JTextField(18);
-        panelForm.add(txtNombreCategoria, gbc);
+        txtNombre = new JTextField(18);
+        panelForm.add(txtNombre, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1;
+        panelForm.add(new JLabel("Nacionalidad:"), gbc);
+        gbc.gridx = 1;
+        txtNacionalidad = new JTextField(18);
+        panelForm.add(txtNacionalidad, gbc);
 
         add(panelForm, BorderLayout.NORTH);
 
-        modeloTabla = new DefaultTableModel(new Object[]{"ID", "Nombre de categoría"}, 0) {
+        // ---- Tabla ----
+        modeloTabla = new DefaultTableModel(new Object[]{"ID", "Nombre", "Nacionalidad"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
-        tblCategorias = new JTable(modeloTabla);
-        tblCategorias.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tblCategorias.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting() && tblCategorias.getSelectedRow() != -1) {
+        tblAutores = new JTable(modeloTabla);
+        tblAutores.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tblAutores.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && tblAutores.getSelectedRow() != -1) {
                 cargarSeleccionEnFormulario();
             }
         });
-        add(new JScrollPane(tblCategorias), BorderLayout.CENTER);
+        add(new JScrollPane(tblAutores), BorderLayout.CENTER);
 
+        // ---- Botones ----
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 8));
         btnGuardar = new JButton("Guardar");
         btnGuardar.addActionListener(e -> guardar());
@@ -112,16 +122,17 @@ public class frmCategoria extends JFrame {
 
     private void cargarTabla() {
         modeloTabla.setRowCount(0);
-        List<CategoriaBeans> categorias = categoriaDatos.listarTodos();
-        for (CategoriaBeans c : categorias) {
-            modeloTabla.addRow(new Object[]{c.getIdCategoria(), c.getNombreCategoria()});
+        List<AutorBeans> autores = autorDatos.listarTodos();
+        for (AutorBeans a : autores) {
+            modeloTabla.addRow(new Object[]{a.getIdAutor(), a.getNombre(), a.getNacionalidad()});
         }
     }
 
     private void cargarSeleccionEnFormulario() {
-        int fila = tblCategorias.getSelectedRow();
-        idCategoriaSeleccionada = (int) modeloTabla.getValueAt(fila, 0);
-        txtNombreCategoria.setText(String.valueOf(modeloTabla.getValueAt(fila, 1)));
+        int fila = tblAutores.getSelectedRow();
+        idAutorSeleccionado = (int) modeloTabla.getValueAt(fila, 0);
+        txtNombre.setText(String.valueOf(modeloTabla.getValueAt(fila, 1)));
+        txtNacionalidad.setText(String.valueOf(modeloTabla.getValueAt(fila, 2)));
         habilitarBotonesEdicion(true);
     }
 
@@ -134,9 +145,9 @@ public class frmCategoria extends JFrame {
         if (!validar()) {
             return;
         }
-        CategoriaBeans c = new CategoriaBeans(txtNombreCategoria.getText().trim());
-        if (categoriaDatos.insertar(c)) {
-            JOptionPane.showMessageDialog(this, "Categoría registrada correctamente.",
+        AutorBeans a = new AutorBeans(txtNombre.getText().trim(), txtNacionalidad.getText().trim());
+        if (autorDatos.insertar(a)) {
+            JOptionPane.showMessageDialog(this, "Autor registrado correctamente.",
                     "Éxito", JOptionPane.INFORMATION_MESSAGE);
             limpiar();
             cargarTabla();
@@ -144,18 +155,19 @@ public class frmCategoria extends JFrame {
     }
 
     private void editar() {
-        if (idCategoriaSeleccionada == 0) {
+        if (idAutorSeleccionado == 0) {
             JOptionPane.showMessageDialog(this,
-                    "Debe seleccionar una categoría de la tabla para editarla.",
+                    "Debe seleccionar un autor de la tabla para editarlo.",
                     "Ningún registro seleccionado", JOptionPane.WARNING_MESSAGE);
             return;
         }
         if (!validar()) {
             return;
         }
-        CategoriaBeans c = new CategoriaBeans(idCategoriaSeleccionada, txtNombreCategoria.getText().trim());
-        if (categoriaDatos.actualizar(c)) {
-            JOptionPane.showMessageDialog(this, "Categoría actualizada correctamente.",
+        AutorBeans a = new AutorBeans(idAutorSeleccionado, txtNombre.getText().trim(),
+                txtNacionalidad.getText().trim());
+        if (autorDatos.actualizar(a)) {
+            JOptionPane.showMessageDialog(this, "Autor actualizado correctamente.",
                     "Éxito", JOptionPane.INFORMATION_MESSAGE);
             limpiar();
             cargarTabla();
@@ -163,18 +175,18 @@ public class frmCategoria extends JFrame {
     }
 
     private void eliminar() {
-        if (idCategoriaSeleccionada == 0) {
+        if (idAutorSeleccionado == 0) {
             JOptionPane.showMessageDialog(this,
-                    "Debe seleccionar una categoría de la tabla para eliminarla.",
+                    "Debe seleccionar un autor de la tabla para eliminarlo.",
                     "Ningún registro seleccionado", JOptionPane.WARNING_MESSAGE);
             return;
         }
         int confirmacion = JOptionPane.showConfirmDialog(this,
-                "¿Está seguro que desea eliminar la categoría seleccionada?",
+                "¿Está seguro que desea eliminar el autor seleccionado?",
                 "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
         if (confirmacion == JOptionPane.YES_OPTION) {
-            if (categoriaDatos.eliminar(idCategoriaSeleccionada)) {
-                JOptionPane.showMessageDialog(this, "Categoría eliminada correctamente.",
+            if (autorDatos.eliminar(idAutorSeleccionado)) {
+                JOptionPane.showMessageDialog(this, "Autor eliminado correctamente.",
                         "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 limpiar();
                 cargarTabla();
@@ -183,25 +195,34 @@ public class frmCategoria extends JFrame {
     }
 
     private void limpiar() {
-        txtNombreCategoria.setText("");
-        idCategoriaSeleccionada = 0;
-        tblCategorias.clearSelection();
+        txtNombre.setText("");
+        txtNacionalidad.setText("");
+        idAutorSeleccionado = 0;
+        tblAutores.clearSelection();
         habilitarBotonesEdicion(false);
-        txtNombreCategoria.requestFocus();
+        txtNombre.requestFocus();
     }
 
     private boolean validar() {
-        String nombre = txtNombreCategoria.getText().trim();
+        String nombre = txtNombre.getText().trim();
+        String nacionalidad = txtNacionalidad.getText().trim();
+
         if (nombre.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "El nombre de la categoría es obligatorio.",
+            JOptionPane.showMessageDialog(this, "El nombre del autor es obligatorio.",
                     "Campo requerido", JOptionPane.WARNING_MESSAGE);
-            txtNombreCategoria.requestFocus();
+            txtNombre.requestFocus();
             return false;
         }
         if (nombre.length() < 3) {
-            JOptionPane.showMessageDialog(this, "El nombre de la categoría debe tener al menos 3 caracteres.",
+            JOptionPane.showMessageDialog(this, "El nombre debe tener al menos 3 caracteres.",
                     "Valor inválido", JOptionPane.WARNING_MESSAGE);
-            txtNombreCategoria.requestFocus();
+            txtNombre.requestFocus();
+            return false;
+        }
+        if (nacionalidad.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "La nacionalidad es obligatoria.",
+                    "Campo requerido", JOptionPane.WARNING_MESSAGE);
+            txtNacionalidad.requestFocus();
             return false;
         }
         return true;
